@@ -1,0 +1,408 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zentik | Internal Hub</title>
+<style>
+:root {
+--bg-deep: #08080a;
+--bg-side: #101012;
+--bg-chat: #141417;
+--bg-panel: #1c1c1f;
+--accent: #00f2ff;
+--accent-dim: rgba(0, 242, 255, 0.1);
+--border: #262629;
+--text-main: #ffffff;
+--text-dim: #949ba4;
+--owner: #ff4757;
+--ceo: #ffa502;
+--staff: #2ed573;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, system-ui, sans-serif; }
+    body { background-color: var(--bg-deep); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
+
+    /* Sidebar */
+    .sidebar { width: 300px; background: var(--bg-side); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+    .logo { padding: 30px; font-size: 24px; font-weight: 900; letter-spacing: -1px; color: #fff; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+    .logo span { color: var(--accent); }
+
+    .user-profile { padding: 20px; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border); }
+    .u-flex { display: flex; align-items: center; gap: 12px; }
+    .avatar { width: 44px; height: 44px; border-radius: 8px; background: var(--accent); color: #000; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; border: 2px solid transparent; }
+    .u-meta .u-name { font-size: 14px; font-weight: 700; display: block; }
+    
+    .badge { font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; }
+    .badge-owner { background: rgba(255, 71, 87, 0.2); color: var(--owner); }
+    .badge-ceo { background: rgba(255, 165, 2, 0.2); color: var(--ceo); }
+    .badge-staff { background: rgba(46, 213, 115, 0.2); color: var(--staff); }
+
+    .nav { flex: 1; overflow-y: auto; padding: 10px; }
+    .nav-label { font-size: 11px; font-weight: 800; color: #4e5058; text-transform: uppercase; margin: 25px 10px 10px; letter-spacing: 0.5px; }
+    .nav-item { padding: 10px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: var(--text-dim); font-size: 14px; transition: 0.2s; margin-bottom: 2px; }
+    .nav-item:hover { background: var(--bg-panel); color: #fff; }
+    .nav-item.active { background: var(--accent-dim); color: var(--accent); font-weight: 600; }
+
+    .sidebar-footer { padding: 15px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+
+    /* Main Chat */
+    .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-chat); }
+    .chat-header { height: 72px; padding: 0 30px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .chat-header h2 { font-size: 18px; display: flex; align-items: center; gap: 8px; }
+
+    .messages { flex: 1; overflow-y: auto; padding: 30px; display: flex; flex-direction: column; gap: 24px; }
+    .msg-wrap { display: flex; gap: 16px; position: relative; group: hover; }
+    .msg-wrap:hover .msg-actions { opacity: 1; }
+    .msg-body { flex: 1; }
+    .msg-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .msg-author { font-size: 14px; font-weight: 700; }
+    .msg-time { font-size: 11px; color: var(--text-dim); }
+    .msg-text { font-size: 15px; color: #dbdee1; line-height: 1.5; white-space: pre-wrap; }
+
+    .msg-actions { 
+        position: absolute; right: 0; top: -10px; background: var(--bg-panel); border: 1px solid var(--border); 
+        border-radius: 4px; display: flex; opacity: 0; transition: 0.1s; overflow: hidden;
+    }
+    .msg-btn { padding: 6px 10px; font-size: 10px; font-weight: 700; color: var(--text-dim); cursor: pointer; border: none; background: none; text-transform: uppercase; }
+    .msg-btn:hover { background: var(--accent-dim); color: var(--accent); }
+    .msg-btn.del:hover { background: rgba(255, 71, 87, 0.1); color: var(--owner); }
+
+    .input-box { padding: 20px 30px 40px; }
+    .input-inner { background: #2b2d31; border-radius: 8px; display: flex; align-items: center; padding: 4px 15px; }
+    .input-inner input { flex: 1; background: none; border: none; color: #fff; padding: 12px 0; font-size: 15px; outline: none; }
+
+    /* Components */
+    .btn { padding: 10px 16px; border-radius: 4px; border: none; font-weight: 700; font-size: 12px; cursor: pointer; transition: 0.2s; text-transform: uppercase; }
+    .btn-accent { background: var(--accent); color: #000; }
+    .btn-accent:hover { background: var(--accent-hover); }
+    .btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--bg-panel); color: #fff; }
+
+    /* Modals */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal { background: var(--bg-side); border: 1px solid var(--border); width: 480px; border-radius: 12px; padding: 30px; }
+    .modal-h { font-size: 20px; font-weight: 800; margin-bottom: 20px; color: var(--accent); }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px; }
+    .field input, .field select { width: 100%; background: #000; border: 1px solid var(--border); padding: 12px; color: #fff; border-radius: 4px; outline: none; }
+    
+    .user-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid var(--border); }
+    .user-row:last-child { border: none; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="logo">ZENTIK<span>.</span></div>
+    <div id="self-profile" class="user-profile"></div>
+
+    <div class="nav">
+        <div class="nav-label">Main</div>
+        <div id="nav-main"></div>
+
+        <div class="nav-label">Business Ops</div>
+        <div id="nav-biz"></div>
+
+        <div class="nav-label">Systems</div>
+        <div id="nav-sys"></div>
+    </div>
+
+    <div class="sidebar-footer" id="admin-tools"></div>
+</aside>
+
+<main class="chat-area">
+    <header class="chat-header">
+        <h2 id="active-title"># general</h2>
+        <div id="chan-tools"></div>
+    </header>
+
+    <div class="messages" id="msg-container"></div>
+
+    <div class="input-box">
+        <div class="input-inner" id="input-container">
+            <input type="text" id="chat-input" placeholder="Message...">
+            <button class="btn btn-accent" onclick="handleSend()">Send</button>
+        </div>
+    </div>
+</main>
+
+<!-- Modal System -->
+<div class="overlay" id="modal-overlay" onclick="closeM()">
+    <div class="modal" id="modal-body" onclick="event.stopPropagation()"></div>
+</div>
+
+<script>
+    // --- INITIAL STATE ---
+    const state = {
+        currentUser: null,
+        activeChan: 'general',
+        users: JSON.parse(localStorage.getItem('zk_users')) || [
+            { id: 1, name: 'Megahant', role: 'Owner', av: 'MH' },
+            { id: 2, name: 'Mark', role: 'CEO', av: 'MK' }
+        ],
+        channels: JSON.parse(localStorage.getItem('zk_chans')) || [
+            { id: 'general', name: 'general', cat: 'main', locked: false },
+            { id: 'announcements', name: 'announcements', cat: 'main', locked: true },
+            { id: 'client-list', name: 'client-list', cat: 'biz', locked: false },
+            { id: 'client-reqs', name: 'client-requirements', cat: 'biz', locked: false },
+            { id: 'payment-proof', name: 'payment-proof', cat: 'biz', locked: false },
+            { id: 'server-status', name: 'server-status', cat: 'sys', locked: true }
+        ],
+        messages: JSON.parse(localStorage.getItem('zk_msgs')) || [
+            { id: 100, ch: 'server-status', user: 'Megahant', role: 'Owner', text: 'Zentik Core Systems are online and encrypted.', time: '09:00 AM' }
+        ]
+    };
+
+    // --- CORE LOGIC ---
+    function init() {
+        if (!state.currentUser) state.currentUser = state.users[0];
+        render();
+    }
+
+    function save() {
+        localStorage.setItem('zk_users', JSON.stringify(state.users));
+        localStorage.setItem('zk_chans', JSON.stringify(state.channels));
+        localStorage.setItem('zk_msgs', JSON.stringify(state.messages));
+    }
+
+    function render() {
+        // Self Profile
+        const self = document.getElementById('self-profile');
+        self.innerHTML = `
+            <div class="u-flex">
+                <div class="avatar">${state.currentUser.av}</div>
+                <div class="u-meta">
+                    <span class="u-name">${state.currentUser.name}</span>
+                    <span class="badge badge-${state.currentUser.role.toLowerCase()}">${state.currentUser.role}</span>
+                </div>
+            </div>
+        `;
+
+        // Channels List
+        const navMain = document.getElementById('nav-main');
+        const navBiz = document.getElementById('nav-biz');
+        const navSys = document.getElementById('nav-sys');
+        navMain.innerHTML = ''; navBiz.innerHTML = ''; navSys.innerHTML = '';
+
+        state.channels.forEach(c => {
+            const item = document.createElement('div');
+            item.className = `nav-item ${state.activeChan === c.id ? 'active' : ''}`;
+            item.innerHTML = `<span>${c.locked ? '🔒' : '#'}</span> ${c.name}`;
+            item.onclick = () => { state.activeChan = c.id; render(); };
+            
+            if (c.cat === 'main') navMain.appendChild(item);
+            else if (c.cat === 'biz') navBiz.appendChild(item);
+            else navSys.appendChild(item);
+        });
+
+        // Admin Actions
+        const tools = document.getElementById('admin-tools');
+        tools.innerHTML = '';
+        const role = state.currentUser.role;
+
+        if (role === 'Owner' || role === 'CEO') {
+            tools.innerHTML += `<button class="btn btn-accent" onclick="openUserMgt()">Team Management</button>`;
+            tools.innerHTML += `<button class="btn btn-ghost" onclick="openChanMgt()">Channels & Hooks</button>`;
+        }
+
+        // ONLY Owner Switch Identity
+        if (role === 'Owner') {
+            tools.innerHTML += `<button class="btn btn-ghost" style="color:var(--owner); border-color:var(--owner)" onclick="openIdentitySwap()">Switch Identity</button>`;
+        }
+
+        // Message Container
+        const mCont = document.getElementById('msg-container');
+        const currentChan = state.channels.find(c => c.id === state.activeChan);
+        document.getElementById('active-title').innerHTML = `<span>${currentChan.locked ? '🔒' : '#'}</span> ${currentChan.name}`;
+        
+        mCont.innerHTML = state.messages.filter(m => m.ch === state.activeChan).map(m => `
+            <div class="msg-wrap">
+                <div class="avatar" style="width:36px; height:36px; font-size:12px;">${m.user.charAt(0)}</div>
+                <div class="msg-body">
+                    <div class="msg-top">
+                        <span class="msg-author">${m.user}</span>
+                        <span class="badge badge-${m.role.toLowerCase()}" style="font-size:7px;">${m.role}</span>
+                        <span class="msg-time">${m.time}</span>
+                    </div>
+                    <div class="msg-text">${m.text}</div>
+                </div>
+                ${(role === 'Owner' || role === 'CEO') ? `
+                    <div class="msg-actions">
+                        <button class="msg-btn" onclick="copyWebhook(${m.id})">Webhook</button>
+                        <button class="msg-btn del" onclick="deleteMsg(${m.id})">Delete</button>
+                    </div>
+                ` : ''}
+            </div>
+        `).join('');
+        mCont.scrollTop = mCont.scrollHeight;
+
+        // Input Access
+        const input = document.getElementById('chat-input');
+        const container = document.getElementById('input-container');
+        if (currentChan.locked && role === 'Staff') {
+            input.disabled = true;
+            input.placeholder = "Read-only channel.";
+            container.style.opacity = '0.3';
+        } else {
+            input.disabled = false;
+            input.placeholder = `Message #${currentChan.name}`;
+            container.style.opacity = '1';
+        }
+    }
+
+    // --- ACTIONS ---
+    function handleSend() {
+        const input = document.getElementById('chat-input');
+        if (!input.value.trim() || input.disabled) return;
+        state.messages.push({
+            id: Date.now(),
+            ch: state.activeChan,
+            user: state.currentUser.name,
+            role: state.currentUser.role,
+            text: input.value,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        input.value = '';
+        save(); render();
+    }
+
+    function deleteMsg(id) {
+        state.messages = state.messages.filter(m => m.id !== id);
+        save(); render();
+    }
+
+    function copyWebhook(id) {
+        alert(`Webhook data for message ${id} copied to clipboard (Simulated).`);
+    }
+
+    // --- MODALS ---
+    function openM(html) {
+        const body = document.getElementById('modal-body');
+        body.innerHTML = html;
+        document.getElementById('modal-overlay').style.display = 'flex';
+    }
+    function closeM() { document.getElementById('modal-overlay').style.display = 'none'; }
+
+    // Team Management
+    function openUserMgt() {
+        const usersHtml = state.users.map(u => `
+            <div class="user-row">
+                <div>
+                    <strong>${u.name}</strong> <span class="badge badge-${u.role.toLowerCase()}">${u.role}</span>
+                </div>
+                <div>
+                    <button class="btn btn-ghost" style="padding:4px 8px; font-size:10px;" onclick="editUserPrompt(${u.id})">Edit</button>
+                    ${(state.currentUser.role === 'Owner' && u.id !== state.currentUser.id) ? `<button class="btn btn-ghost" style="padding:4px 8px; font-size:10px; color:var(--owner)" onclick="removeUser(${u.id})">Remove</button>` : ''}
+                </div>
+            </div>
+        `).join('');
+
+        openM(`
+            <div class="modal-h">Team Management</div>
+            <div class="field">
+                <label>Add New Staff</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="new-name" placeholder="Full Name">
+                    <select id="new-role" style="width:120px;">
+                        <option value="Staff">Staff</option>
+                        <option value="CEO">CEO</option>
+                    </select>
+                    <button class="btn btn-accent" onclick="addUser()">Add</button>
+                </div>
+            </div>
+            <label class="nav-label">Current Directory</label>
+            <div style="background:#000; border-radius:4px; border:1px solid var(--border); max-height:200px; overflow-y:auto;">
+                ${usersHtml}
+            </div>
+        `);
+    }
+
+    function addUser() {
+        const name = document.getElementById('new-name').value;
+        const role = document.getElementById('new-role').value;
+        if(!name) return;
+        state.users.push({ id: Date.now(), name, role, av: name.substring(0,2).toUpperCase() });
+        save(); openUserMgt(); render();
+    }
+
+    function removeUser(id) {
+        state.users = state.users.filter(u => u.id !== id);
+        save(); openUserMgt(); render();
+    }
+
+    function editUserPrompt(id) {
+        const u = state.users.find(x => x.id === id);
+        openM(`
+            <div class="modal-h">Edit Member: ${u.name}</div>
+            <div class="field">
+                <label>Display Name</label>
+                <input type="text" id="edit-name" value="${u.name}">
+            </div>
+            <div class="field">
+                <label>Assign Role</label>
+                <select id="edit-role">
+                    <option value="Staff" ${u.role === 'Staff' ? 'selected' : ''}>Staff</option>
+                    <option value="CEO" ${u.role === 'CEO' ? 'selected' : ''}>CEO</option>
+                    <option value="Owner" ${u.role === 'Owner' ? 'selected' : ''}>Owner</option>
+                </select>
+            </div>
+            <button class="btn btn-accent" style="width:100%" onclick="saveUser(${id})">Update Member</button>
+        `);
+    }
+
+    function saveUser(id) {
+        const u = state.users.find(x => x.id === id);
+        u.name = document.getElementById('edit-name').value;
+        u.role = document.getElementById('edit-role').value;
+        u.av = u.name.substring(0,2).toUpperCase();
+        save(); openUserMgt(); render();
+    }
+
+    // Identity Swap
+    function openIdentitySwap() {
+        const list = state.users.map(u => `
+            <button class="btn btn-ghost" style="width:100%; text-align:left; margin-bottom:8px;" onclick="swapTo(${u.id})">
+                Swap to ${u.name} (${u.role})
+            </button>
+        `).join('');
+        openM(`<div class="modal-h">Identity Matrix</div>${list}`);
+    }
+
+    function swapTo(id) {
+        state.currentUser = state.users.find(u => u.id === id);
+        closeM(); render();
+    }
+
+    // Channels
+    function openChanMgt() {
+        openM(`
+            <div class="modal-h">Channel & Webhooks</div>
+            <div class="field">
+                <label>Create New Channel</label>
+                <input type="text" id="c-name" placeholder="channel-name" style="margin-bottom:10px;">
+                <select id="c-cat">
+                    <option value="main">Main Category</option>
+                    <option value="biz">Business Category</option>
+                    <option value="sys">Systems Category</option>
+                </select>
+            </div>
+            <button class="btn btn-accent" style="width:100%" onclick="addChan()">Create</button>
+        `);
+    }
+
+    function addChan() {
+        const name = document.getElementById('c-name').value.toLowerCase().replace(/\s/g, '-');
+        const cat = document.getElementById('c-cat').value;
+        if(!name) return;
+        state.channels.push({ id: name, name, cat, locked: false });
+        save(); closeM(); render();
+    }
+
+    // Global Listeners
+    window.addEventListener('keydown', e => { if(e.key === 'Enter') handleSend(); });
+    init();
+</script>
+</body>
+</html>
